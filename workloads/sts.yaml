@@ -1,0 +1,125 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: k8s-test-sts2
+  namespace: default
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: k8s-test-sts2
+  serviceName: k8s-test-sts2
+  template:
+    metadata:
+      annotations:
+      labels:
+        app: k8s-test-sts2
+      namespace: default
+    spec:
+      containers:
+      - env:
+        - name: ALL_CONTAINER_NAME
+          value: k8s-test-sts-php,k8s-test-sts-redis
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: THS_TIER
+          value: test
+        - name: THS_CLUSTER
+          value: test
+        - name: RUN_MODE
+          value: test
+        - name: THS_K8S
+          value: "true"
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        image: hub.hexin.cn:9082/ths/redis:4.0.11-alpine
+        imagePullPolicy: IfNotPresent
+        name: k8s-test-sts-redis
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2Gi
+          requests:
+            cpu: "1"
+            memory: 200Mi
+        securityContext:
+          privileged: true
+          procMount: Default
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /proc/cpuinfo
+          name: cpuinfo
+        - mountPath: /proc/diskstats
+          name: diskstats
+        - mountPath: /proc/meminfo
+          name: meminfo
+        - mountPath: /proc/stat
+          name: stat
+        - mountPath: /proc/swaps
+          name: swaps
+        - mountPath: /proc/uptime
+          name: uptime
+      dnsConfig:
+        options:
+        - name: ndots
+          value: "2"
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      tolerations:
+      - key: ths-department
+        operator: Equal
+      volumes:
+      - hostPath:
+          path: /var/lib/lxcfs/proc/cpuinfo
+          type: ""
+        name: cpuinfo
+      - hostPath:
+          path: /var/lib/lxcfs/proc/diskstats
+          type: ""
+        name: diskstats
+      - hostPath:
+          path: /var/lib/lxcfs/proc/meminfo
+          type: ""
+        name: meminfo
+      - hostPath:
+          path: /var/lib/lxcfs/proc/stat
+          type: ""
+        name: stat
+      - hostPath:
+          path: /var/lib/lxcfs/proc/swaps
+          type: ""
+        name: swaps
+      - hostPath:
+          path: /var/lib/lxcfs/proc/uptime
+          type: ""
+        name: uptime
+      - emptyDir: {}
+        name: log-json-volname
+      - emptyDir: {}
+        name: pilotlogrotates
+  updateStrategy:
+    rollingUpdate:
+      partition: 0
+    type: RollingUpdate
