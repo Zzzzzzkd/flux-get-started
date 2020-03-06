@@ -50,7 +50,7 @@ spec:
             fieldRef:
               apiVersion: v1
               fieldPath: spec.nodeName
-        image: hub.hexin.cn:9082/ths/redis:4.0.11-alpine
+        image: nginx
         imagePullPolicy: IfNotPresent
         name: k8s-test-sts-redis
         resources:
